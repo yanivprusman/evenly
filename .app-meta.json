@@ -1,0 +1,7 @@
+{
+  "description": "Evenly — split shared expenses with friends and groups; Splitwise parity with no transaction limits",
+  "icon": "Scale",
+  "sharedLibs": [
+    "android-feedback-lib"
+  ]
+}
