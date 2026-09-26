@@ -77,6 +77,12 @@ fun ExpenseRow(e: Expense, subtitleExtra: String? = null, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodyLarge,
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
+                if (subtitleExtra != null) Text(
+                    isolate(subtitleExtra),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                )
             } else {
                 // Descriptions are often Hebrew in an English UI: keep them left-aligned next to
                 // the icon, but let the text itself run right-to-left.

@@ -2,6 +2,7 @@ package com.automatelinux.evenly.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -26,7 +27,7 @@ import com.automatelinux.evenly.data.model.GroupDetail
 import com.automatelinux.evenly.data.model.Stats
 import com.automatelinux.evenly.data.rememberResource
 import com.automatelinux.evenly.ui.components.*
-import com.automatelinux.evenly.ui.theme.MoneyLarge
+import com.automatelinux.evenly.ui.theme.Evenly
 import com.automatelinux.evenly.ui.theme.MoneyMedium
 import com.automatelinux.evenly.ui.theme.MoneySmall
 import com.automatelinux.evenly.util.category
@@ -43,6 +44,7 @@ fun ChartsScreen(groupId: Int) {
         (listOfNotNull(g?.group?.defaultCurrency) + used).distinct()
     }
     var currency by remember(g?.group?.defaultCurrency) { mutableStateOf(g?.group?.defaultCurrency ?: app.defaultCurrency) }
+    var wholeGroup by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
         BackTopBar("Totals", onBack = { app.nav.back() }, subtitle = g?.group?.name)
@@ -50,9 +52,11 @@ fun ChartsScreen(groupId: Int) {
             Loaded(group) {}
             return@Column
         }
-        val stats = rememberResource(app.api, "/api/stats?groupId=$groupId&currency=$currency", Stats.serializer())
-        OfflineBanner(stats)
-        RefreshBox(stats) {
+        val mine = rememberResource(app.api, "/api/stats?groupId=$groupId&currency=$currency", Stats.serializer())
+        val whole = rememberResource(app.api, "/api/stats?groupId=$groupId&currency=$currency&scope=group", Stats.serializer())
+        val shown = if (wholeGroup) whole else mine
+        OfflineBanner(shown)
+        RefreshBox(shown) {
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
                 if (currencies.size > 1) {
                     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -62,18 +66,18 @@ fun ChartsScreen(groupId: Int) {
                     }
                     Spacer(Modifier.height(8.dp))
                 }
-                val groupSpend = g.expenses.filter { !it.isPayment && it.deletedAt == null && it.currency == currency }.sumOf { it.cost }
-                Loaded(stats, skeleton = { SkeletonBlock(height = 240.dp, shape = RoundedCornerShape(20.dp)) }) { s ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        TotalTile("Group spending", formatAmount(groupSpend, currency), Modifier.weight(1f))
-                        TotalTile("Your share", formatAmount(s.total, currency), Modifier.weight(1f))
-                    }
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    TotalTile("Group spending", whole.data?.let { formatAmount(it.total, currency) }, !wholeGroup, "scope-group", Modifier.weight(1f)) { wholeGroup = true }
+                    TotalTile("Your share", mine.data?.let { formatAmount(it.total, currency) }, wholeGroup, "scope-mine", Modifier.weight(1f)) { wholeGroup = false }
+                }
+                Loaded(shown, skeleton = { Spacer(Modifier.height(20.dp)); SkeletonBlock(height = 240.dp, shape = RoundedCornerShape(20.dp)) }) { s ->
+                    val who = if (wholeGroup) "Group spending" else "Your share"
                     if (s.byCategory.isEmpty()) {
-                        EmptyState(Icons.Outlined.PieChart, "Nothing to chart yet", "Once you have a share in some expenses, you'll see where the money goes.")
+                        EmptyState(Icons.Outlined.PieChart, "Nothing to chart yet", "Once there are expenses in $currency, you'll see where the money goes.")
                     } else {
-                        SectionHeader("Your share by category")
-                        EvenlyCard { CategoryDonut(s, currency) }
-                        SectionHeader("Your share by month")
+                        SectionHeader("$who by category")
+                        EvenlyCard { CategoryDonut(s, currency, who) }
+                        SectionHeader("$who by month")
                         EvenlyCard { MonthBars(s, currency) }
                     }
                     Spacer(Modifier.height(32.dp))
@@ -83,17 +87,25 @@ fun ChartsScreen(groupId: Int) {
     }
 }
 
+/** Doubles as the scope switch: the highlighted tile is the one the charts below show. */
 @Composable
-private fun TotalTile(label: String, value: String, modifier: Modifier) {
-    EvenlyCard(modifier) {
-        Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun TotalTile(label: String, value: String?, dimmed: Boolean, tag: String, modifier: Modifier, onClick: () -> Unit) {
+    val selected = !dimmed
+    Column(
+        modifier.clip(RoundedCornerShape(20.dp))
+            .background(if (selected) MaterialTheme.colorScheme.primaryContainer else Evenly.money.card)
+            .clickable(onClick = onClick).testTag(tag).padding(16.dp),
+    ) {
+        Text(label, style = MaterialTheme.typography.labelLarge,
+            color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(4.dp))
-        Text(value, style = MoneyMedium)
+        if (value == null) SkeletonBlock(96.dp, 18.dp) else Text(value, style = MoneyMedium,
+            color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface)
     }
 }
 
 @Composable
-private fun CategoryDonut(s: Stats, currency: String) {
+private fun CategoryDonut(s: Stats, currency: String, who: String) {
     val rows = s.byCategory.filter { it.amount > 0 }.sortedByDescending { it.amount }
     val total = rows.sumOf { it.amount }.coerceAtLeast(1)
     val track = MaterialTheme.colorScheme.surfaceContainerHighest
@@ -115,7 +127,7 @@ private fun CategoryDonut(s: Stats, currency: String) {
             }
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Your share", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(who, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(formatAmount(s.total, currency), style = MoneyMedium)
         }
     }

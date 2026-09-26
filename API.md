@@ -93,3 +93,17 @@ Receipts: `receiptUrl` is a path relative to the API base (`/r/<32-hex>.jpg`) an
 
 Recurring expenses: when `repeat != "none"`, the server creates the next occurrence (a copy
 with the next date) the first time any request arrives on or after that date.
+
+## Client notes (from the Android app, `mobile/`)
+
+- `GET /api/groups/:id` → `balances[].net` is **each member's own net in the group**
+  (positive = that member gets money back), not the caller's point of view. The app renders it
+  that way ("Ayelet gets back ₪…"); `myNet` and `debts` are what drive the caller's wording.
+- A payment has exactly two shares **and** the caller must be one of them, so a caller cannot
+  record a payment between two *other* members (Splitwise can). The app enforces "one side is
+  you" in Settle up. If that should be allowed, the server needs to exempt payments from the
+  caller-in-shares rule.
+- `GET /api/currencies` has no minor-unit exponent. The app assumes ISO-4217: 0 decimals for
+  JPY, KRW, CLP, ISK, VND; 2 for everything else. Adding `decimals` would remove the guess.
+- Payments are posted as `splitType: "exact"` with `input` = the minor units owed
+  (0 for the payer, `cost` for the receiver), `category: "general"`, `description: "Payment"`.

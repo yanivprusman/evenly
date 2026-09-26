@@ -158,6 +158,7 @@ data class MonthAmount(val month: String, val amount: Long)
 
 @Serializable
 data class Stats(
+    val currency: String? = null,
     val byCategory: List<CategoryAmount> = emptyList(),
     val byMonth: List<MonthAmount> = emptyList(),
     val total: Long = 0,
