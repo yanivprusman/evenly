@@ -1,5 +1,10 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#FFFFFF" android:pathData="M38,38 h32 a6,6 0 0 1 6,6 v20 a6,6 0 0 1 -6,6 h-32 a6,6 0 0 1 -6,-6 v-20 a6,6 0 0 1 6,-6 z" />
-    <path android:fillColor="#B2DFDB" android:pathData="M46,48 h16 v4 h-16 z M46,56 h16 v4 h-16 z" />
+    <!-- one coin, split into two equal halves, resting level on a beam over a fulcrum -->
+    <group android:translateY="-5">
+        <path android:fillColor="#F3EBDD" android:pathData="M24.5,55 A14.5,14.5 0 0 1 53.5,55 Z" />
+        <path android:fillColor="#FF7A59" android:pathData="M54.5,55 A14.5,14.5 0 0 1 83.5,55 Z" />
+        <path android:fillColor="#F3EBDD" android:pathData="M25.25,56.5 h57.5 a3.25,3.25 0 0 1 0,6.5 h-57.5 a3.25,3.25 0 0 1 0,-6.5 z" />
+        <path android:fillColor="#5FD3B0" android:pathData="M54,64.5 L62.5,78.5 L45.5,78.5 Z" />
+    </group>
 </vector>
