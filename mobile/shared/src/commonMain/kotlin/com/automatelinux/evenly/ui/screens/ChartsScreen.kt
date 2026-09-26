@@ -136,7 +136,7 @@ private fun CategoryDonut(s: Stats, currency: String) {
                     Box(Modifier.fillMaxWidth(frac).fillMaxHeight().clip(RoundedCornerShape(3.dp)).background(c.color))
                 }
             }
-            Text("${(frac * 100).toInt()}%", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Text(if (frac < 0.01f) "<1%" else "${(frac * 100).toInt()}%", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.width(44.dp), textAlign = TextAlign.End)
         }
     }

@@ -180,8 +180,8 @@ private fun Header(e: Expense) {
             buildString {
                 append(prettyDate(e.date))
                 if (e.repeat != "none") append(" · repeats ${e.repeat}")
-                e.createdBy?.let { append(" · added by ${app.fullName(it)}") }
-                e.updatedBy?.let { append(" · edited by ${app.fullName(it)}") }
+                e.createdBy?.let { append(" · added by ${app.fullName(it).let { n -> if (it == app.meId) "you" else n }}") }
+                e.updatedBy?.let { append(" · edited by ${app.fullName(it).let { n -> if (it == app.meId) "you" else n }}") }
             },
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -206,10 +206,11 @@ private fun ShareRow(e: Expense, s: Share) {
         }
         val net = s.paid - s.owed
         if (!e.isPayment && net != 0L) {
-            Text(
-                (if (net > 0) "+" else "−") + formatAmount(net, e.currency),
-                style = MoneySmall, color = if (net > 0) Evenly.money.owed else Evenly.money.owe,
-            )
+            val color = if (net > 0) Evenly.money.owed else Evenly.money.owe
+            Column(horizontalAlignment = Alignment.End) {
+                Text(if (net > 0) "gets back" else "owes", style = MaterialTheme.typography.labelMedium, color = color)
+                Text(formatAmount(net, e.currency), style = MoneySmall, color = color)
+            }
         }
     }
 }

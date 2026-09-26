@@ -43,7 +43,7 @@ class ExpenseForm(val me: Int, defaultCurrency: String) {
     val paidText = mutableStateMapOf<Int, String>()
 
     var splitType by mutableStateOf(SplitType.EQUAL)
-    val included = mutableStateListOf<Int>()
+    val included = mutableStateListOf<Int>().apply { add(me) }
     val inputText = mutableStateMapOf<Int, String>()
 
     fun updateDescription(d: String) {
@@ -68,6 +68,32 @@ class ExpenseForm(val me: Int, defaultCurrency: String) {
         if (singlePayer != null && singlePayer !in ordered) singlePayer = me
         paidText.keys.retainAll(ordered.toSet())
         inputText.keys.retainAll(ordered.toSet())
+    }
+
+    /** Switch split type, carrying the current split over so the new view starts out valid. */
+    fun switchSplit(t: SplitType) {
+        if (t == splitType) return
+        val current = split().owed
+        val people = members.filter { id -> (current[id] ?: 0L) > 0 }.ifEmpty { members }
+        inputText.clear()
+        when (t) {
+            SplitType.EQUAL, SplitType.ADJUSTMENT -> {
+                included.clear(); included.addAll(people)
+            }
+            SplitType.EXACT -> members.forEach { id -> current[id]?.takeIf { it > 0 }?.let { inputText[id] = amountToInput(it, currency) } }
+            SplitType.PERCENT -> {
+                // Even basis points; the first people take the leftover hundredths.
+                val each = 10000L / people.size
+                var left = 10000L - each * people.size
+                people.forEach { id ->
+                    val bp = each + if (left > 0) 1 else 0
+                    if (left > 0) left--
+                    inputText[id] = if (bp % 100 == 0L) (bp / 100).toString() else "${bp / 100}.${(bp % 100).toString().padStart(2, '0')}"
+                }
+            }
+            SplitType.SHARES -> people.forEach { inputText[it] = "1" }
+        }
+        splitType = t
     }
 
     val cost: Long? get() = parseAmount(amountText, currency)

@@ -125,7 +125,7 @@ private fun BottomBar(current: Tab, onSelect: (Tab) -> Unit) {
 @Composable
 fun HomeTopBar(title: String, actions: @Composable RowScope.() -> Unit = {}) {
     Row(
-        Modifier.fillMaxWidth().statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
+        Modifier.fillMaxWidth().statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 4.dp).heightIn(min = 56.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(title, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
@@ -296,7 +296,9 @@ private fun FriendCard(f: FriendSummary) {
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(f.friend.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                f.byGroup.filter { it.net.nonZero().isNotEmpty() }.take(3).forEach { gn ->
+                // Per-group lines only add information when the balance is spread over several.
+                val open = f.byGroup.filter { it.net.nonZero().isNotEmpty() }
+                if (open.size > 1) open.take(3).forEach { gn ->
                     gn.net.nonZero().forEach { m ->
                         val where = if (gn.groupId == null) "Non-group" else "In ${isolate(gn.name)}"
                         val phrase = if (m.amount > 0) "$first owes you" else "you owe $first"

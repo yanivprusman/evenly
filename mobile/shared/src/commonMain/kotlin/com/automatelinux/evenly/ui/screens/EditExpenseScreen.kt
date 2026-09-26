@@ -244,7 +244,7 @@ private fun SplitSummary(form: ExpenseForm) {
                 Spacer(Modifier.width(10.dp))
                 Text(app.fullName(id), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
-                    (if (p > 0) "paid ${formatAmount(p, form.currency)} · " else "") + "owes ${formatAmount(owed, form.currency)}",
+                    (if (p > 0) "paid ${formatAmount(p, form.currency)} · " else "") + (if (id == app.meId) "owe " else "owes ") + formatAmount(owed, form.currency),
                     style = MoneySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -471,7 +471,7 @@ private fun SplitSheet(form: ExpenseForm, onDone: () -> Unit) {
             Text("Split options", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 20.dp, bottom = 8.dp))
             Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SplitType.entries.forEach { t ->
-                    FilterChip(form.splitType == t, { form.splitType = t }, label = { Text(t.label) }, modifier = Modifier.testTag("split-${t.key}"))
+                    FilterChip(form.splitType == t, { form.switchSplit(t) }, label = { Text(t.label) }, modifier = Modifier.testTag("split-${t.key}"))
                 }
             }
             Text(

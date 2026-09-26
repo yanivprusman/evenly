@@ -11,13 +11,18 @@ private val SYMBOLS = mapOf(
     "BRL" to "R$", "MXN" to "MX$", "ZAR" to "R ", "AED" to "AED ", "EGP" to "E£", "JOD" to "JD ",
 )
 
-private val ZERO_DECIMAL = setOf("JPY", "KRW", "HUF", "CLP", "ISK", "VND")
+// ISO-4217 currencies whose minor unit is the unit itself.
+private val ZERO_DECIMAL = setOf("JPY", "KRW", "CLP", "ISK", "VND")
 
 /** Symbols learned from GET /api/currencies override the built-in table. */
 object CurrencyTable {
     private val learned = mutableMapOf<String, String>()
     fun learn(code: String, symbol: String) { learned[code] = symbol }
-    fun symbol(code: String): String = learned[code] ?: SYMBOLS[code] ?: "$code "
+    /** Letter symbols ("CHF", "lei") get a space so they don't run into the number. */
+    fun symbol(code: String): String {
+        val s = (learned[code] ?: SYMBOLS[code] ?: code).trimEnd()
+        return if (s.last().isLetter()) "$s " else s
+    }
     fun decimals(code: String): Int = if (code in ZERO_DECIMAL) 0 else 2
 }
 
