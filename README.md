@@ -1,34 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Evenly
 
-## Getting Started
+The user's own Splitwise: groups, friends, every split type, settle up, activity, comments,
+receipts, search, charts and CSV export — with **no limit on how many expenses you add**, and
+no Pro tier.
 
-First, run the development server:
+- **Backend** (this Next.js app, dev port 3163): the ledger API described in [`API.md`](API.md).
+  Data lives in database `evenly` on the shared MySQL (3308, the NUC). Credentials in the
+  gitignored `.env.local` (`DB_*`, `EVENLY_DATA_DIR` for receipts).
+- **Android** (`mobile/`, KMP/Compose, package `com.automatelinux.evenly`): the phone app.
+  `mobile/.env` (gitignored) holds `API_BASE_URL` and the user's `API_TOKEN`.
+  Build on the desktop only: `./gradlew assembleDevDebug`.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Ledger model
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Every expense has one row per person in `expense_shares` with `paid` and `owed` in minor units
+(agorot); the server rejects any write where either column does not sum to the cost. A payment
+("settle up") is an expense with `is_payment = 1` and exactly two shares. Balances are always
+per currency. Group debts are simplified (fewest transfers) unless the group turns that off,
+in which case they are the pairwise debts each expense created.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Imported from Splitwise (2026-09-26)
 
-## Learn More
+The user's Splitwise history was read off his phone's Splitwise app (UI text via
+`uiautomator`, no Splitwise API) and imported with `source = 'splitwise'`:
+`pruguy` (326 expenses, Oct 2024 → Sep 2026), the settled group `פרוסי` (archived), and
+non-group expenses with Ayelet Guy. Verified: the imported balance equals Splitwise's own,
+**you owe Ayelet ₪19,951.65**, to the agora.
 
-To learn more about Next.js, take a look at the following resources:
+## Testing
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+A throwaway user **Test Runner** (friends Bob Test, Carol Test, group "Trip test") exists for
+write tests, so the real ledger is never used as a fixture.
