@@ -43,12 +43,12 @@ fun paymentSentence(app: AppContext, e: Expense): String {
     val from = e.shares.firstOrNull { it.paid > 0 }?.userId
     val to = e.shares.firstOrNull { it.owed > 0 }?.userId
     val f = from?.let { app.shortName(it) } ?: "Someone"
-    val t = to?.let { app.shortName(it) } ?: "someone"
+    val t = to?.let { if (it == app.meId) "you" else app.shortName(it) } ?: "someone"
     return "$f paid $t ${formatAmount(e.cost, e.currency)}"
 }
 
 @Composable
-fun ExpenseRow(e: Expense, subtitleExtra: String? = null, onClick: () -> Unit) {
+fun ExpenseRow(e: Expense, subtitleExtra: String? = null, onRestore: (() -> Unit)? = null, onClick: () -> Unit) {
     val app = LocalApp.current
     val me = app.meId
     val my = e.shares.firstOrNull { it.userId == me }
@@ -60,7 +60,7 @@ fun ExpenseRow(e: Expense, subtitleExtra: String? = null, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick)
             .testTag("expense-row-${e.id}").padding(horizontal = 8.dp, vertical = 10.dp)
-            .alpha(if (deleted) 0.5f else 1f),
+            .alpha(if (deleted) 0.6f else 1f),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.width(34.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -105,7 +105,14 @@ fun ExpenseRow(e: Expense, subtitleExtra: String? = null, onClick: () -> Unit) {
         Spacer(Modifier.width(10.dp))
         Column(horizontalAlignment = Alignment.End, modifier = Modifier.widthIn(min = 76.dp)) {
             when {
-                deleted -> Text("deleted", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                deleted -> {
+                    Text("deleted", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (onRestore != null) androidx.compose.material3.TextButton(
+                        onClick = onRestore,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                        modifier = Modifier.height(32.dp).testTag("restore-row-${e.id}"),
+                    ) { Text("Restore") }
+                }
                 my == null -> Text("not involved", style = MaterialTheme.typography.labelMedium, color = Evenly.money.settled)
                 e.isPayment -> {
                     val label = if (my.paid > 0) "you paid" else "you received"

@@ -223,7 +223,7 @@ private fun Receipt(e: Expense, onAttach: () -> Unit) {
     var zoom by remember { mutableStateOf(false) }
     LaunchedEffect(e.receiptUrl) {
         val url = e.receiptUrl ?: return@LaunchedEffect
-        try { image = decodeImage(app.api.bytes(url)); failed = image == null } catch (_: Exception) { failed = true }
+        try { image = decodeImage(app.api.publicBytes(url)); failed = image == null } catch (_: Exception) { failed = true }
     }
     EvenlyCard(padding = PaddingValues(12.dp)) {
         when {

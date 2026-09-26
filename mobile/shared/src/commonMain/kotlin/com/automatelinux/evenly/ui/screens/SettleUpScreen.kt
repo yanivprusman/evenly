@@ -62,6 +62,14 @@ fun SettleUpScreen(s: Screen.SettleUp) {
     var pickCurrency by remember { mutableStateOf(false) }
     // For a friend payment: which group it is recorded in (null = non-group).
     var inGroup by remember { mutableStateOf(s.groupId) }
+    // Open on the first suggested debt unless the caller already named one.
+    var prefilled by remember { mutableStateOf(s.amount != null) }
+    LaunchedEffect(suggestions) {
+        val d = suggestions.firstOrNull()
+        if (!prefilled && d != null) {
+            from = d.from; to = d.to; currency = d.currency; amountText = amountToInput(d.amount, d.currency); prefilled = true
+        }
+    }
     var groupChosen by remember { mutableStateOf(s.groupId != null) }
 
     // Friend: when exactly one group holds the balance, record the payment there by default.

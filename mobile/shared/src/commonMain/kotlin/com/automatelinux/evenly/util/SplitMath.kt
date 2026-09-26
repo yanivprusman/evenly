@@ -84,7 +84,8 @@ fun computeOwed(
             val bps = members.associateWith { percentToBp(inputs[it] ?: 0.0) }
             if (bps.values.any { it < 0 }) return SplitResult(zero, "Percentages can't be negative")
             val rem = 10000 - bps.values.sum()
-            if (rem != 0L) return SplitResult(zero, "Percentages must add up to 100%", rem)
+            // Still show what each typed percentage is worth while the total is off.
+            if (rem != 0L) return SplitResult(members.associateWith { cost * bps.getValue(it) / 10000 }, "Percentages must add up to 100%", rem)
             return SplitResult(zero + distribute(cost, members.map { it to bps.getValue(it) }))
         }
         SplitType.SHARES -> {

@@ -48,6 +48,7 @@ fun FriendDetailScreen(friendId: Int) {
     var confirmDelete by remember { mutableStateOf(false) }
     var exporting by remember { mutableStateOf(false) }
     LaunchedEffect(res.data) { res.data?.let { app.learn(it.friend) } }
+    val restore = rememberWriteAction()
     LaunchedEffect(groupNames.data) { groupNames.data?.forEach { app.learn(it.group.members) } }
 
     Scaffold(
@@ -127,7 +128,10 @@ fun FriendDetailScreen(friendId: Int) {
                             item(key = "h-$month") { SectionHeader(month, Modifier.padding(horizontal = 20.dp)) }
                             items(list, key = { it.id }) { e ->
                                 Box(Modifier.padding(horizontal = 8.dp)) {
-                                    ExpenseRow(e, subtitleExtra = e.groupId?.let { names[it] } ?: "non-group") { nav.push(Screen.ExpenseDetail(e.id)) }
+                                    ExpenseRow(e, subtitleExtra = e.groupId?.let { names[it] } ?: "non-group", onRestore = { restore.run {
+                                        app.api.sendEmpty(HttpMethod.Post, "/api/expenses/${e.id}/restore", Expense.serializer())
+                                        res.refresh()
+                                    } }) { nav.push(Screen.ExpenseDetail(e.id)) }
                                 }
                             }
                         }
@@ -136,6 +140,7 @@ fun FriendDetailScreen(friendId: Int) {
             }
         }
     }
+    WriteErrorDialog(restore, "Couldn't restore")
     if (exporting) ExportSheet("/api/export.csv?friendId=$friendId", "evenly-${(res.data?.friend?.name ?: "friend").filter { it.isLetterOrDigit() }.ifEmpty { "friend" }}.csv") { exporting = false }
     if (confirmDelete) AlertDialog(
         onDismissRequest = { confirmDelete = false },

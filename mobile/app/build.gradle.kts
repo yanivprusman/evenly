@@ -21,7 +21,8 @@ val envProps = Properties()
 if (envFile.exists()) envFile.inputStream().use { envProps.load(it) }
 val apiBaseUrl = envProps.getProperty("API_BASE_URL", "http://10.7.0.1:3163/")
 // Bearer token for the Evenly API (identifies the user). Never commit it — it lives only in .env.
-val apiToken = envProps.getProperty("API_TOKEN", "")
+// -PevenlyApiToken=... overrides it for a one-off build (e.g. a throwaway test user).
+val apiToken = providers.gradleProperty("evenlyApiToken").orNull ?: envProps.getProperty("API_TOKEN", "")
 
 android {
     namespace = "com.automatelinux.evenly"

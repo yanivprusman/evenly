@@ -48,6 +48,7 @@ fun GroupDetailScreen(groupId: Int) {
     val res = rememberResource(app.api, "/api/groups/$groupId", GroupDetail.serializer())
     var exporting by remember { mutableStateOf(false) }
     LaunchedEffect(res.data) { res.data?.let { app.learn(it.group.members) } }
+    val restore = rememberWriteAction()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -94,7 +95,10 @@ fun GroupDetailScreen(groupId: Int) {
                             item(key = "h-$month") { SectionHeader(month, Modifier.padding(horizontal = 20.dp)) }
                             items(list, key = { it.id }) { e ->
                                 Box(Modifier.padding(horizontal = 8.dp)) {
-                                    ExpenseRow(e) { nav.push(Screen.ExpenseDetail(e.id)) }
+                                    ExpenseRow(e, onRestore = { restore.run {
+                                        app.api.sendEmpty(HttpMethod.Post, "/api/expenses/${e.id}/restore", Expense.serializer())
+                                        res.refresh()
+                                    } }) { nav.push(Screen.ExpenseDetail(e.id)) }
                                 }
                             }
                         }
@@ -103,6 +107,7 @@ fun GroupDetailScreen(groupId: Int) {
             }
         }
     }
+    WriteErrorDialog(restore, "Couldn't restore")
     if (exporting) ExportSheet("/api/export.csv?groupId=$groupId", "evenly-${(res.data?.group?.name ?: "group").filter { it.isLetterOrDigit() }.ifEmpty { "group" }}.csv") { exporting = false }
 }
 

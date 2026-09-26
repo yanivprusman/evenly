@@ -47,6 +47,20 @@ class Api(baseUrl: String, private val token: String, private val cache: Respons
         defaultRequest { header(HttpHeaders.Authorization, "Bearer $token") }
     }
 
+    /** Receipts (`/r/<hex>.jpg`) are public by capability URL: fetched with no auth header. */
+    private val publicClient = createHttpClient {
+        expectSuccess = false
+        install(HttpTimeout) { requestTimeoutMillis = 20_000; connectTimeoutMillis = 8_000 }
+    }
+
+    suspend fun publicBytes(path: String): ByteArray {
+        val resp = try { publicClient.request(url(path)) { method = HttpMethod.Get } } catch (e: Exception) {
+            throw ApiException("Can't reach the Evenly server. Check your connection.")
+        }
+        if (!resp.status.isSuccess()) throw ApiException("Receipt not found (${resp.status.value})", resp.status.value)
+        return resp.bodyAsBytes()
+    }
+
     fun url(path: String) = if (path.startsWith("http")) path else base + path
 
     private suspend fun check(resp: HttpResponse): String {
