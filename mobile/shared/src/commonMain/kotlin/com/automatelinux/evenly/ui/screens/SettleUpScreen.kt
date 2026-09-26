@@ -125,7 +125,7 @@ fun SettleUpScreen(s: Screen.SettleUp) {
             }
             Spacer(Modifier.height(8.dp))
             Text(
-                "${app.fullName(from)} paid ${if (to == -1) "…" else app.fullName(to)}",
+                "${app.fullName(from)} paid ${if (to == -1) "…" else if (to == app.meId) "you" else app.fullName(to)}",
                 style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(20.dp))

@@ -325,7 +325,7 @@ fun AddFriendDialog(onDismiss: () -> Unit, onAdded: (com.automatelinux.evenly.da
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(name, { name = it }, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("friend-name"))
-                OutlinedTextField(phone, { phone = it }, label = { Text("Phone (for WhatsApp reminders)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("friend-phone"),
+                OutlinedTextField(phone, { phone = it }, label = { Text("Phone") }, supportingText = { Text("Used for WhatsApp reminders") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("friend-phone"),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone))
                 OutlinedTextField(email, { email = it }, label = { Text("Email (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("friend-email"),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Email))

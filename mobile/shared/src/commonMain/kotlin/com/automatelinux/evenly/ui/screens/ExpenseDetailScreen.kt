@@ -141,7 +141,7 @@ fun ExpenseDetailScreen(expenseId: Int) {
     if (confirmDelete) AlertDialog(
         onDismissRequest = { confirmDelete = false },
         title = { Text("Delete this ${if (res.data?.isPayment == true) "payment" else "expense"}?") },
-        text = { Text("It disappears from balances. You can restore it later from Activity.") },
+        text = { Text("It stops counting toward balances. It stays in the list, struck through, with a Restore button.") },
         confirmButton = {
             TextButton(onClick = {
                 confirmDelete = false
